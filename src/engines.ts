@@ -58,11 +58,12 @@ function wireYoutubeOnce(): void {
     if (nxt) void playSongNode(nxt);
     else skipOnceDone = false;
   });
-  ytEngine.on("time", (_t) => {
-    try {
-      void formatTimeLocal;
-    } catch {}
+  // The UI listeners were registered on the audio engine at startup: forward the YouTube engine events to them.
+  const fwd = (e: "time" | "ready" | "state") => ytEngine!.on(e, (d) => {
+    try { (audioEngine as unknown as { emit: (ev: string, data?: unknown) => void }).emit(e, d); } catch {}
   });
+  fwd("time"); fwd("ready"); fwd("state");
+  void formatTimeLocal;
   ytEngine.on("state", (st) => {
     try {
       const btn = document.getElementById("playPauseBtn") as HTMLButtonElement | null;
