@@ -1313,7 +1313,7 @@ body.dragging .drop-zone.top-zone .drop-line {
   height: var(--dock-h);
   overflow: hidden;
   display: grid;
-  grid-template-columns: 280px 1fr 260px;
+  grid-template-columns: 240px 1fr 400px;
   gap: var(--s3);
   align-items: center;
   padding: 8px var(--s6) 8px var(--s6);
@@ -1660,7 +1660,10 @@ body.dragging .drop-zone.top-zone .drop-line {
   outline: none;
   cursor: pointer;
   display: block;
+  width: 120px;
+  min-width: 120px;
   max-width: 120px;
+  flex: 0 0 120px;
 }
 
 #volumeBar::-webkit-slider-runnable-track {
@@ -2447,4 +2450,20 @@ body.dragging .drop-zone.top-zone .drop-line {
   .rail {
     padding-bottom: calc(var(--dock-h) + var(--s6));
   }
+}
+
+/* The hero ring sits on the ink band: draw it in paper so the progress is visible */
+.hero-ring .ring-track {
+  stroke: var(--paper-a24);
+  stroke-width: 3px;
+}
+
+.hero-ring .ring-progress {
+  stroke: var(--paper);
+  stroke-width: 5px;
+}
+
+.hero-ring .ring-knob {
+  fill: var(--paper);
+  stroke: var(--ink);
 }
