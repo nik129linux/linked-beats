@@ -1,0 +1,9 @@
+node_modules
+dist
+site
+*.log
+.vercel
+# local working material, not part of the project
+inspo/
+inspo.txt
+_briefs/

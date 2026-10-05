@@ -1,0 +1,167 @@
+/* First paint: top bar, band and list fade/translateY(12px)->0 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.topbar {
+  animation: fadeInUp var(--dur-reveal) var(--ease-out-expo) backwards;
+}
+
+.hero {
+  animation: fadeInUp var(--dur-reveal) var(--ease-out-expo) 60ms backwards;
+}
+
+.linked-section {
+  animation: fadeInUp var(--dur-reveal) var(--ease-out-expo) 120ms backwards;
+}
+
+.toolbar {
+  animation: fadeInUp var(--dur-reveal) var(--ease-out-expo) 180ms backwards;
+}
+
+/* Masked word reveal — signature move */
+.word-mask {
+  overflow: hidden;
+}
+
+.word-inner {
+  display: inline-block;
+  transform: translateY(0);
+}
+
+.word-inner.enter {
+  animation: wordIn var(--dur-reveal) var(--ease-out-expo) backwards;
+}
+
+.word-inner.exit {
+  animation: wordOut 420ms var(--ease-in-out-quart) backwards;
+}
+
+@keyframes wordIn {
+  from {
+    transform: translateY(105%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes wordOut {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(-105%);
+  }
+}
+
+/* Linked strip re-centre — translateX on strip */
+.ll-strip.moving {
+  transition: transform var(--dur-reveal) var(--ease-out-expo);
+}
+
+/* Arrow pointer-rewrite flash scaleX */
+.ll-arrow.flash {
+  animation: arrowFlash var(--dur-base) var(--ease-out-cubic);
+}
+
+@keyframes arrowFlash {
+  0% {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+/* Record rotation — only while playing */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Hover/press/focus shared */
+.btn,
+.btn-circle,
+.btn-toggle,
+.topbar-link,
+.song-row,
+.ll-node,
+.search-result-row {
+  transition-timing-function: var(--ease-out-cubic);
+}
+
+.btn:active,
+.btn-circle:active,
+.btn-pill-outline:active {
+  transform: scale(0.98);
+}
+
+/* FLIP list — transform + opacity only, 320ms */
+.song-row {
+  will-change: transform, opacity;
+}
+
+/* Toast slide 8px + fade — already in components, ensure transform/opacity only */
+.toast {
+  will-change: transform, opacity;
+}
+
+/* Visualizer bars — transform height via scaleY if needed */
+.visualizer {
+  will-change: opacity;
+}
+
+/* Reduced motion — no reveal, no rotation, no FLIP, instant */
+@media (prefers-reduced-motion: reduce) {
+  .topbar,
+  .hero,
+  .linked-section,
+  .toolbar {
+    animation: none !important;
+  }
+
+  .cover-art.spinning {
+    animation: none !important;
+  }
+
+  .word-inner.enter,
+  .word-inner.exit {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .ll-strip.moving {
+    transition: none !important;
+  }
+
+  .ll-arrow.flash {
+    animation: none !important;
+  }
+
+  .song-row {
+    transition: none !important;
+  }
+
+  .toast {
+    transition: none !important;
+  }
+}
