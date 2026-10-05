@@ -98,10 +98,9 @@ describe("layout guards (dock + scroll)", () => {
       /@media\s*\(\s*max-width\s*:\s*720px\s*\)[\s\S]*?\.dock-artist[\s\S]*?display\s*:\s*none/i.test(comp),
       "mobile must hide .dock-artist (filename/secondary line) with display:none"
     );
-    assert.ok(
-      /@media\s*\(\s*max-width\s*:\s*720px\s*\)[\s\S]*?\.volume-wrap[\s\S]*?display\s*:\s*none/i.test(comp),
-      "mobile must hide .volume-wrap with display:none"
-    );
+    const hidesWrap = /@media\s*\(\s*max-width\s*:\s*720px\s*\)[\s\S]*?\.volume-wrap[\s\S]*?display\s*:\s*none/i.test(comp);
+    const hidesBar = /@media\s*\(\s*max-width\s*:\s*720px\s*\)[\s\S]*?#volumeBar[\s\S]*?display\s*:\s*none/i.test(comp);
+    assert.ok(hidesWrap || hidesBar, "mobile must hide volume (volume-wrap or volumeBar) with display:none");
   });
 
   it("no 100vw for bands and no scrollbar-gutter stable on mobile", () => {

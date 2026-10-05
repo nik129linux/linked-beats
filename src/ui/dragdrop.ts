@@ -1,10 +1,28 @@
 import { moveTarget } from "../library.js";
-import { getActiveList, dragFromIndex, dragFromNode, setDragFromIndex, setDragFromNode, getDragFromIndex, draggedRemote, setDraggedRemote } from "../state.js";
+import { getActiveList, dragFromIndex, dragFromNode, setDragFromIndex, setDragFromNode, getDragFromIndex, draggedRemote, setDraggedRemote, undoManager } from "../state.js";
 import { dropZoneTop, songListEl, dropOverlayEl } from "./dom.js";
 import { addRemoteSong } from "./actions.js";
 import { handleFiles } from "./actions.js";
 import { renderAll, renderSongs } from "./render.js";
 import { setCaption } from "./linkedview.js";
+import { makeMoveCommand } from "../undo.js";
+import { saveLibrary } from "./persistence.js";
+import { library } from "../state.js";
+
+function clearDragState(): void {
+  setDragFromNode(null);
+  setDragFromIndex(null);
+  setDraggedRemote(null);
+  document.body.classList.remove("dragging");
+  dropZoneTop.classList.remove("drag-over");
+  for (const el of Array.from(document.querySelectorAll(".gap.drag-over"))) el.classList.remove("drag-over");
+  for (const el of Array.from(document.querySelectorAll(".song-row.dragging"))) el.classList.remove("dragging");
+  const ov = dropOverlayEl;
+  if (ov) {
+    ov.classList.remove("visible");
+    setTimeout(() => ov.classList.add("hidden"), 200);
+  }
+}
 
 export function initDragDrop(): void {
   attachTopZoneHandlers();
@@ -14,6 +32,28 @@ export function initDragDrop(): void {
   initFullWindowDrop();
   initGapHover();
   initTopZoneVisibility();
+  // Esc cancels drag
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && hasDragSource()) {
+      e.preventDefault();
+      clearDragState();
+      renderSongs();
+    }
+  });
+  // Drop outside gaps resets state
+  document.addEventListener("drop", (e) => {
+    const target = e.target as HTMLElement;
+    const isGap = !!target.closest?.(".gap");
+    const isTop = target.closest?.("#dropZoneTop") !== null;
+    const isOverlay = target.closest?.("#dropOverlay") !== null;
+    if (!isGap && !isTop && !isOverlay && hasDragSource()) {
+      clearDragState();
+      renderSongs();
+    }
+  });
+  document.addEventListener("dragend", () => {
+    clearDragState();
+  });
 }
 
 function hasDragSource(): boolean {
@@ -63,6 +103,11 @@ function attachTopZoneHandlers(): void {
 }
 
 function onSongListDragOver(e: DragEvent): void {
+  const searchVal = (document.getElementById("searchInput") as HTMLInputElement | null)?.value.trim() ?? "";
+  if (searchVal.length > 0 && hasDragSource() && !draggedRemote) {
+    // disabled while filtered — do not allow gap hover
+    return;
+  }
   const gapEl = (e.target as HTMLElement).closest(".gap") as HTMLElement | null;
   if (gapEl) {
     e.preventDefault();
@@ -115,22 +160,23 @@ function handleInternalMoveInternal(gap: number): void {
   const target = moveTarget(from, gap);
   if (target === null) { renderSongs(); return; }
   try {
-    getActiveList().move(from, target);
+    const cmd = makeMoveCommand(getActiveList(), from, target);
+    undoManager.execute(cmd);
     setCaption(`move(${from}→${target})`, 4);
-    renderAll();
+    saveLibrary(library); renderAll(); document.dispatchEvent(new CustomEvent("queue-update"));
   } catch (err) { console.error(err); }
 }
 
 function handleInternalMove(from: number, gap: number): void {
-  // legacy entry point for tests / fallback when node not set
   const target = moveTarget(from, gap);
   setDragFromNode(null);
   setDragFromIndex(null);
   if (target === null) { renderSongs(); return; }
   try {
-    getActiveList().move(from, target);
+    const cmd = makeMoveCommand(getActiveList(), from, target);
+    undoManager.execute(cmd);
     setCaption(`move(${from}→${target})`, 4);
-    renderAll();
+    saveLibrary(library); renderAll(); document.dispatchEvent(new CustomEvent("queue-update"));
   } catch (err) { console.error(err); }
 }
 

@@ -26,8 +26,10 @@ interface DialogOpts {
   showInput?: boolean;
 }
 
+let dialogOpener: HTMLElement | null = null;
 function openDialog(opts: DialogOpts): Promise<string | boolean | null> {
   const o = getOverlay();
+  dialogOpener = document.activeElement as HTMLElement | null;
   const titleEl = o.querySelector(".dialog-title") as HTMLElement;
   const msgEl = o.querySelector(".dialog-msg") as HTMLElement;
   const wrap = o.querySelector(".dialog-input-wrap") as HTMLElement;
@@ -54,6 +56,7 @@ function openDialog(opts: DialogOpts): Promise<string | boolean | null> {
     const close = (val: string | boolean | null): void => {
       o.classList.add("hidden");
       document.removeEventListener("keydown", onKey);
+      if (dialogOpener) { dialogOpener.focus({ preventScroll: true } as FocusOptions); dialogOpener = null; }
       resolve(val);
     };
     const onKey = (e: KeyboardEvent): void => {

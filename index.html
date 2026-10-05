@@ -7,6 +7,7 @@
   <meta name="theme-color" content="#F3F0E8" />
   <meta name="description" content="Linked Beats — browser music player where every playlist is a doubly linked list." />
   <title>Linked Beats — Doubly Linked Music Player</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='12' cy='16' r='8' fill='none' stroke='%23141413' stroke-width='1.8'/%3E%3Ccircle cx='20' cy='16' r='8' fill='none' stroke='%23141413' stroke-width='1.8'/%3E%3Ccircle cx='16' cy='7' r='2' fill='%23141413'/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;600&display=swap" rel="stylesheet">
@@ -16,17 +17,25 @@
   <link rel="stylesheet" href="styles/motion.css" />
 </head>
 <body>
+  <a href="#mainContent" class="sr-only skip-link">Skip to content</a>
   <div class="app">
     <header class="topbar">
       <div class="brand">
+        <div class="brand-logo" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 28 28" class="brand-mark" aria-hidden="true">
+            <circle cx="10" cy="14" r="7" fill="none" stroke="var(--ink)" stroke-width="1.6"/>
+            <circle cx="18" cy="14" r="7" fill="none" stroke="var(--ink)" stroke-width="1.6"/>
+          </svg>
+          <span class="logo-orbit"><span class="logo-dot"></span></span>
+        </div>
         <h1>Linked Beats</h1>
-        <span id="playlistCount" class="mono small muted" style="display:none"></span>
+        <span id="playlistCount" class="mono small muted hidden"></span>
       </div>
       <nav class="topbar-nav" aria-label="Primary">
-        <button id="openSearchBtn" class="topbar-link" aria-haspopup="dialog">Search online</button>
-        <button id="playlistsToggle" class="topbar-link" aria-expanded="true" aria-controls="playlistDrawer">Playlists</button>
-        <button id="shortcutsToggle" class="topbar-link">Shortcuts</button>
-        <button id="menuToggle" class="topbar-link" aria-expanded="false" aria-controls="menuSheet">Menu</button>
+        <button id="openSearchBtn" class="topbar-link" aria-haspopup="dialog" title="Search online">Search online</button>
+        <button id="playlistsToggle" class="topbar-link" aria-expanded="true" aria-controls="playlistDrawer" title="Toggle playlists">Playlists</button>
+        <button id="shortcutsToggle" class="topbar-link" title="Shortcuts">Shortcuts</button>
+        <button id="menuToggle" class="topbar-link" aria-expanded="false" aria-controls="menuSheet" title="Menu">Menu</button>
       </nav>
     </header>
 
@@ -52,14 +61,25 @@
           </div>
         </div>
         <canvas id="visualizer" class="visualizer" width="600" height="48" aria-hidden="true"></canvas>
+        <div id="visualizerLabel" class="mono small visualizer-label" aria-hidden="true"></div>
         <div id="heroEmptyCta" class="hero-empty-cta hidden">
           <button id="heroAddSongsBtn" class="btn-pill-outline">Add songs</button>
         </div>
       </div>
       <div class="hero-cover">
-        <div id="coverArt" class="cover-art" aria-hidden="true">
-          <span class="cover-art-fallback">♪</span>
+        <div id="heroRing" class="hero-ring" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0:00 of 0:00" aria-label="Seek">
+          <svg class="hero-ring-svg" width="260" height="260" viewBox="0 0 260 260" aria-hidden="true">
+            <circle class="ring-track" cx="130" cy="130" r="120" fill="none" stroke="var(--rule)" stroke-width="2"/>
+            <circle id="heroRingProgress" class="ring-progress" cx="130" cy="130" r="120" fill="none" stroke="var(--ink)" stroke-width="4" stroke-linecap="butt" transform="rotate(-90 130 130)" stroke-dasharray="753.98" stroke-dashoffset="753.98"/>
+            <circle id="heroRingKnob" class="ring-knob" cx="130" cy="10" r="6" fill="var(--ink)"/>
+            <circle class="ring-hit" cx="130" cy="130" r="130" fill="transparent" stroke="transparent" stroke-width="0"/>
+          </svg>
+          <div id="coverArt" class="cover-art" aria-hidden="true">
+            <span class="cover-art-fallback">♪</span>
+          </div>
+          <div id="heroRingTooltip" class="ring-tooltip mono hidden">0:00</div>
         </div>
+        <div id="heroTime" class="hero-time mono small">0:00 / 0:00</div>
       </div>
     </section>
 
@@ -77,13 +97,13 @@
           <div class="stack small-gap">
             <div class="row">
               <input id="newPlaylistName" class="rail-input" type="text" placeholder="New playlist name" maxlength="40" aria-label="New playlist name" />
-              <button id="createPlaylistBtn" class="btn pill primary small">Create</button>
+              <button id="createPlaylistBtn" class="btn pill primary small" aria-label="Create playlist" title="Create playlist">Create</button>
             </div>
             <div class="row">
-              <button id="renamePlaylistBtn" class="btn small">Rename</button>
-              <button id="deletePlaylistBtn" class="btn small">Delete</button>
+              <button id="renamePlaylistBtn" class="btn small" aria-label="Rename playlist" title="Rename playlist">Rename</button>
+              <button id="deletePlaylistBtn" class="btn small" aria-label="Delete playlist" title="Delete playlist">Delete</button>
             </div>
-            <button id="clearLibraryBtn" class="btn small">Clear library</button>
+            <button id="clearLibraryBtn" class="btn small" aria-label="Clear library" title="Clear library">Clear library</button>
           </div>
         </section>
         <section class="panel">
@@ -93,18 +113,37 @@
             <input id="fileInput" type="file" accept="audio/*" multiple hidden />
             <input id="folderInput" type="file" webkitdirectory multiple hidden />
             <div class="row">
-              <button id="addFilesBtn" class="btn pill primary small">Add audio files</button>
-              <button id="addFolderBtn" class="btn small">Add folder</button>
+              <button id="addFilesBtn" class="btn pill primary small" aria-label="Add audio files" title="Add audio files">Add audio files</button>
+              <button id="addFolderBtn" class="btn small" aria-label="Add folder" title="Add folder">Add folder</button>
             </div>
             <div class="row">
-              <button id="addFirstBtn" class="btn small">Add to start</button>
-              <button id="addLastBtn" class="btn small">Add to end</button>
+              <button id="addFirstBtn" class="btn small" aria-label="Add to start" title="Add to start">Add to start</button>
+              <button id="addLastBtn" class="btn small" aria-label="Add to end" title="Add to end">Add to end</button>
             </div>
             <p class="muted small">Drop files on gaps or the window.</p>
           </div>
         </section>
         <section class="panel">
-          <button id="openSearchBtn2" class="btn pill primary small" aria-haspopup="dialog" style="display:none">Search online</button>
+          <button id="openSearchBtn2" class="btn pill primary small search-online-hidden" aria-haspopup="dialog">Search online</button>
+        </section>
+        <section class="panel" id="extrasPanel">
+          <div id="playlistStats" class="mono small muted"></div>
+          <div id="storedInfo" class="mono small muted"></div>
+          <div class="row">
+            <button id="exportJsonBtn" class="btn small">Export library (JSON)</button>
+            <button id="exportM3uBtn" class="btn small">Export playlist (M3U)</button>
+          </div>
+          <div class="row">
+            <input id="importFile" type="file" accept=".json" hidden />
+            <button id="importBtn" class="btn small">Import</button>
+            <button id="clearStoredBtn" class="btn small">Remove stored audio</button>
+          </div>
+          <div class="row">
+            <button class="btn small sleep-btn" data-sleep="15">Sleep 15</button>
+            <button class="btn small sleep-btn" data-sleep="30">Sleep 30</button>
+            <button class="btn small sleep-btn" data-sleep="60">Sleep 60</button>
+            <button id="clearSleepBtn" class="btn small">Clear sleep</button>
+          </div>
         </section>
         <section class="panel shortcuts-panel">
           <h3 class="label">Shortcuts</h3>
@@ -114,18 +153,25 @@
             <li><kbd>Shift</kbd> + arrows prev / next</li>
             <li><kbd>M</kbd> mute <kbd>S</kbd> shuffle <kbd>R</kbd> repeat</li>
             <li><kbd>/</kbd> search <kbd>?</kbd> help <kbd>Ctrl+K</kbd> online</li>
+            <li><kbd>Ctrl+Z</kbd> undo <kbd>Ctrl+Shift+Z</kbd> redo</li>
           </ul>
         </section>
       </aside>
 
-      <main class="center">
+      <main class="center" id="mainContent">
         <div class="toolbar">
           <div class="search-wrap">
             <input id="searchInput" type="text" placeholder="Search by title..." aria-label="Search by title" />
+            <button id="clearSearchBtn" class="btn ghost small hidden" type="button" aria-label="Clear search" title="Clear search">×</button>
+            <span id="searchResultLive" class="sr-only" aria-live="polite"></span>
           </div>
+          <div id="dragHint" class="mono small muted hidden drag-hint-text">Clear the search to reorder</div>
           <div class="toolbar-actions">
-            <button id="shuffleBtn" class="btn-toggle" aria-pressed="false">Shuffle</button>
-            <button id="repeatBtn" class="btn-toggle" aria-pressed="false">Repeat: Off</button>
+            <button id="shuffleBtn" class="btn-toggle" aria-pressed="false" title="Shuffle">Shuffle</button>
+            <button id="repeatBtn" class="btn-toggle" aria-pressed="false" title="Repeat">Repeat: Off</button>
+            <button id="listActionsBtn" class="btn small" aria-haspopup="menu" aria-expanded="false" aria-label="List actions" title="List actions">List actions</button>
+            <button id="undoBtn" class="btn small" aria-label="Undo" aria-disabled="true" disabled>UNDO</button>
+            <button id="redoBtn" class="btn small" aria-label="Redo" aria-disabled="true" disabled>REDO</button>
             <span id="countLabel" class="muted small"></span>
           </div>
         </div>
@@ -135,39 +181,57 @@
           <ul id="songList" class="song-list" role="list" aria-label="Playlist songs"></ul>
           <div id="emptyState" class="empty-state">
             <p class="empty-title">No songs yet</p>
-            <p class="muted small">Use Add audio files or drop files.</p>
+            <div id="emptySteps" class="muted small empty-steps">
+              <span>1. Add files — click Add audio files</span>
+              <span>2. Add folder — click Add folder</span>
+              <span>3. Search online — click Search online</span>
+            </div>
+            <p id="noSearchResults" class="muted small hidden">No matches — try another search.</p>
           </div>
         </div>
       </main>
     </div>
 
+    <section id="queuePanelWrap" class="queue-sheet hidden" aria-hidden="true">
+      <div class="queue-sheet-header">
+        <h3 class="label">Up next</h3>
+        <button id="closeQueueSheet" class="btn small ghost" aria-label="Close">Close</button>
+      </div>
+      <div id="queuePanel" class="mono small"></div>
+    </section>
+
     <footer class="player-bar" id="playerBar" aria-label="Playback controls">
       <audio id="audio" preload="metadata"></audio>
-      <div class="dock-meta">
+      <div class="dock-left">
         <div id="dockCover" class="dock-cover" aria-hidden="true">♪</div>
         <div class="dock-info">
           <div id="dockTitle" class="dock-title">Nothing playing</div>
           <div id="dockArtist" class="dock-artist muted small">—</div>
+          <div id="dockTime" class="dock-time mono small">0:00 / 0:00</div>
         </div>
       </div>
       <div class="dock-center">
         <div class="controls">
-          <button id="prevBtn" class="btn-circle" aria-label="Previous"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M6 6h2v12H6zM18 18l-8.5-6L18 6v12z"/></svg></button>
-          <button id="playPauseBtn" class="btn-circle primary" aria-label="Play"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 5.14v14l11-7z"/></svg></button>
-          <button id="nextBtn" class="btn-circle" aria-label="Next"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M6 18l8.5-6L6 6v12zM16 21h2V6h-2z"/></svg></button>
-        </div>
-        <div class="progress-wrap">
-          <span id="currentTime" class="time">0:00</span>
-          <div class="range-wrap">
-            <input id="progressBar" type="range" min="0" max="100" value="0" step="0.1" aria-label="Progress" />
-            <div id="progressTooltip" class="tooltip mono hidden">0:00</div>
+          <button id="seekBackBtn" class="btn-circle" aria-label="Rewind 10 seconds" title="Rewind 10 seconds"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/><text x="12" y="15" text-anchor="middle" font-size="7" fill="currentColor">10</text></svg></button>
+          <button id="prevBtn" class="btn-circle" aria-label="Previous" title="Previous"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M6 6h2v12H6zM18 18l-8.5-6L18 6v12z"/></svg></button>
+          <div id="dockRing" class="dock-ring" aria-hidden="true">
+            <svg class="dock-ring-svg" width="72" height="72" viewBox="0 0 72 72" aria-hidden="true">
+              <circle class="ring-track" cx="36" cy="36" r="32" fill="none" stroke="var(--rule)" stroke-width="2"/>
+              <circle id="dockRingProgress" class="ring-progress" cx="36" cy="36" r="32" fill="none" stroke="var(--ink)" stroke-width="4" stroke-linecap="butt" transform="rotate(-90 36 36)" stroke-dasharray="201.06" stroke-dashoffset="201.06"/>
+            </svg>
+            <button id="playPauseBtn" class="btn-circle primary" aria-label="Play" title="Play"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 5.14v14l11-7z"/></svg></button>
           </div>
-          <span id="totalTime" class="time">0:00</span>
+          <button id="nextBtn" class="btn-circle" aria-label="Next" title="Next"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M6 18l8.5-6L6 6v12zM16 21h2V6h-2z"/></svg></button>
+          <button id="seekForwardBtn" class="btn-circle" aria-label="Forward 10 seconds" title="Forward 10 seconds"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z"/><text x="12" y="15" text-anchor="middle" font-size="7" fill="currentColor">10</text></svg></button>
         </div>
       </div>
-      <div class="volume-wrap">
-        <span class="mono label" style="font-size:10px">Vol</span>
-        <input id="volumeBar" type="range" min="0" max="1" step="0.01" value="0.9" aria-label="Volume" />
+      <div class="dock-right">
+        <button id="queueToggle" class="queue-toggle" aria-expanded="false" aria-controls="queuePanelWrap" aria-label="Up next"><span class="queue-toggle-icon" aria-hidden="true">≡</span><span class="mono small">Up next</span></button>
+        <button id="speedBtn" class="btn small mono speed-btn" aria-label="Playback speed 1x" title="Playback speed">1x</button>
+        <button id="muteBtn" class="btn small ghost mute-btn" aria-label="Mute" aria-pressed="false" title="Mute"><span id="muteIcon"></span></button>
+        <input id="volumeBar" type="range" min="0" max="1" step="0.01" value="0.9" aria-label="Volume" title="Volume" style="--range-fill:90%" />
+        <span id="volumeReadout" class="mono small volume-readout">90%</span>
+        <button id="dockMoreBtn" class="btn small ghost dock-more" aria-label="More" aria-expanded="false" title="More">…</button>
       </div>
     </footer>
   </div>
@@ -178,12 +242,12 @@
   <div id="shortcutsDialog" class="dialog-overlay hidden">
     <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="shortcutsTitle">
       <h3 id="shortcutsTitle" class="dialog-title">Shortcuts</h3>
-      <ul class="mono small" style="margin:0;padding-left:16px">
+      <ul class="mono small shortcuts-list">
         <li>Space play/pause</li><li>Left/Right seek 5s</li><li>Shift+Left/Right prev/next</li>
         <li>Up/Down volume, M mute</li><li>S shuffle, R repeat</li><li>/ search, Delete remove row, ? toggle this</li>
       </ul>
       <div class="dialog-actions">
-        <button id="closeShortcutsBtn" class="btn pill primary small">Close</button>
+        <button id="closeShortcutsBtn" class="btn pill primary small" aria-label="Close" title="Close">Close</button>
       </div>
     </div>
   </div>
@@ -191,9 +255,16 @@
     <div class="dialog search-dialog">
       <div class="search-header">
         <h3 id="searchPanelTitle">Search online</h3>
-        <button id="closeSearchPanel" class="btn small" aria-label="Close">Close</button>
+          <button id="closeSearchPanel" class="btn small" aria-label="Close" title="Close">Close</button>
       </div>
-      <input id="searchOnlineInput" type="text" placeholder="Search iTunes..." autocomplete="off" aria-label="Search online" />
+      <input id="linkInput" type="text" placeholder="Paste a link (YouTube, Spotify, Apple Music, audio URL)..." autocomplete="off" aria-label="Paste link" />
+      <div id="linkFeedback" class="mono small hidden"></div>
+      <div class="chip-group" role="group" aria-label="Source">
+        <button class="chip source-chip" data-source="youtube" aria-pressed="true">YouTube</button>
+        <button class="chip source-chip" data-source="itunes" aria-pressed="false">iTunes (30s previews)</button>
+        <button class="chip source-chip" data-source="free" aria-pressed="false">Free Music (CC)</button>
+      </div>
+      <input id="searchOnlineInput" type="text" placeholder="Search YouTube..." autocomplete="off" aria-label="Search online" />
       <div class="chip-group" role="group" aria-label="Filter">
         <button class="chip" data-chip="all" aria-pressed="true">All</button>
         <button class="chip" data-chip="artist" aria-pressed="false">Artist</button>
@@ -208,14 +279,20 @@
 
   <div id="menuSheet" class="menu-sheet hidden" role="dialog" aria-modal="true" aria-label="Menu">
     <div class="menu-sheet-header">
-      <span style="font-family:var(--font-display);font-size:28px">Linked Beats</span>
-      <button id="closeMenuBtn" class="menu-close">Close</button>
+      <span class="menu-title">Linked Beats</span>
+      <button id="closeMenuBtn" class="menu-close" aria-label="Close menu" title="Close menu">Close</button>
     </div>
     <nav class="menu-sheet-nav" aria-label="Menu">
       <button class="topbar-link" data-menu="search">Search online</button>
       <button class="topbar-link" data-menu="playlists">Playlists</button>
       <button class="topbar-link" data-menu="shortcuts">Shortcuts</button>
     </nav>
+  </div>
+
+  <div id="dockMoreSheet" class="dock-more-sheet hidden" role="dialog" aria-hidden="true">
+    <button class="speed-clone btn small mono"></button>
+    <button class="mute-clone btn small ghost"></button>
+    <input class="volume-clone" type="range" min="0" max="1" step="0.01" />
   </div>
 
   <script type="module" src="dist/main.js"></script>

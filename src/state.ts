@@ -2,6 +2,7 @@ import { Library, Song } from "./library.js";
 import { ListNode } from "./doublylinked.js";
 import { Player } from "./player.js";
 import { loadLibrary } from "./ui/persistence.js";
+import { UndoManager } from "./undo.js";
 
 // Singleton application state shared across UI modules.
 // Try to load persisted library; fall back to default.
@@ -78,3 +79,5 @@ export let draggedRemote: SearchResult | null = null;
 export function setDraggedRemote(v: SearchResult | null): void {
   draggedRemote = v;
 }
+
+export const undoManager = new UndoManager();

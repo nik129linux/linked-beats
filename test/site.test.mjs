@@ -46,7 +46,7 @@ describe("site pack", () => {
     const linkRe = /<link[^>]+href="([^"]+)"/g;
     while ((m = linkRe.exec(html)) !== null) {
       const href = m[1];
-      if (href.startsWith("http") || href.startsWith("//") || href.includes("fonts.googleapis")) continue;
+      if (href.startsWith("http") || href.startsWith("//") || href.startsWith("data:") || href.includes("fonts.googleapis")) continue;
       const p = join(siteDir, href.replace(/^\//, ""));
       assert.ok(existsSync(p), `link href ${href} not found at ${p}`);
     }

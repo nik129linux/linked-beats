@@ -6,10 +6,11 @@
   "scripts": {
     "build": "tsc",
     "build:site": "tsc && node scripts/pack.mjs",
-    "test": "tsc && node --test",
+    "test": "tsc && node --test --test-concurrency=1",
     "serve": "python3 -m http.server 8000"
   },
   "devDependencies": {
+    "jsdom": "^24.1.0",
     "typescript": "^5.5.0"
   }
 }

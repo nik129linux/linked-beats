@@ -37,6 +37,15 @@
   /* dock */
   --dock-h: 88px;
   --topbar-h: 64px;
+  /* rings */
+  --ring-size-hero: 260px;
+  --ring-size-dock: 72px;
+  --ring-stroke: 4px;
+  --ring-track: 2px;
+  --ring-knob: 12px;
+  --ring-knob-active: 16px;
+  --ring-radius-hero: 120px;
+  --ring-radius-dock: 32px;
   /* easing + durations */
   --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
   --ease-out-cubic: cubic-bezier(0.215, 0.61, 0.355, 1);

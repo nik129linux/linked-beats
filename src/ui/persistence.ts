@@ -1,8 +1,18 @@
 import { Library, Song } from "../library.js";
 import { DoublyLinkedList } from "../doublylinked.js";
 
+export const KEY_V3 = "linkedBeats:v3";
 export const KEY_V2 = "linkedBeats:v2";
 export const KEY_V1 = "linkedBeats:v1";
+
+export function migrateSongV2toV3(ps: PersistedSong): PersistedSong {
+  if (!ps.source) ps.source = "local";
+  if (ps.source === "youtube" && !ps.videoId && ps.url) {
+    const m = ps.url.match(/[?&]v=([^&]+)/) ?? ps.url.match(/youtu\.be\/([^?]+)/) ?? ps.url.match(/\/shorts\/([^?]+)/) ?? ps.url.match(/\/embed\/([^?]+)/);
+    if (m) ps.videoId = m[1] ?? undefined;
+  }
+  return ps;
+}
 
 interface PersistedSong {
   id: string;
@@ -11,11 +21,15 @@ interface PersistedSong {
   fileName?: string;
   fileSize?: number;
   artist?: string;
-  source?: "local" | "remote";
+  source?: "local" | "remote" | "youtube";
   remoteId?: string;
   artworkUrl?: string;
   trackTimeMillis?: number;
   url?: string;
+  videoId?: string;
+  license?: string;
+  attribution?: string;
+  noCors?: boolean;
 }
 
 interface PersistedLibrary {
@@ -36,25 +50,32 @@ function songToPersisted(s: Song): PersistedSong {
   if (s.remoteId !== undefined) ps.remoteId = s.remoteId;
   if (s.artworkUrl !== undefined) ps.artworkUrl = s.artworkUrl;
   if (s.trackTimeMillis !== undefined) ps.trackTimeMillis = s.trackTimeMillis;
-  // Persist URL only for remote songs (previewUrl). For local, keep empty.
-  if (s.source === "remote" && s.url) ps.url = s.url;
+  if (s.videoId !== undefined) ps.videoId = s.videoId;
+  if (s.license !== undefined) ps.license = s.license;
+  if (s.attribution !== undefined) ps.attribution = s.attribution;
+  if (s.noCors !== undefined) ps.noCors = s.noCors;
+  if ((s.source === "remote" || s.source === "youtube") && s.url) ps.url = s.url;
   return ps;
 }
 
 function persistedToSong(ps: PersistedSong): Song {
-  const isRemote = ps.source === "remote";
+  const src = ps.source === "remote" || ps.source === "youtube" ? ps.source : "local";
   const song: Song = {
     id: ps.id,
     title: ps.title,
-    url: isRemote ? (ps.url ?? "") : "",
+    url: src === "local" ? "" : (ps.url ?? ""),
     duration: ps.duration,
     fileName: ps.fileName,
     fileSize: ps.fileSize,
     artist: ps.artist,
-    source: isRemote ? "remote" : "local",
+    source: src,
     remoteId: ps.remoteId,
     artworkUrl: ps.artworkUrl,
     trackTimeMillis: ps.trackTimeMillis,
+    videoId: ps.videoId,
+    license: ps.license,
+    attribution: ps.attribution,
+    noCors: ps.noCors,
   };
   return song;
 }
@@ -101,30 +122,38 @@ export function saveLibrary(lib: Library): void {
       }
       data.playlists[name] = songs;
     }
-    localStorage.setItem(KEY_V2, JSON.stringify(data));
+    const json = JSON.stringify(data);
+    localStorage.setItem(KEY_V3, json);
+    localStorage.setItem(KEY_V2, json);
   } catch {
-    // ignore quota or disabled storage
   }
 }
 
 export function loadLibrary(): Library | null {
   try {
-    let raw = localStorage.getItem(KEY_V2);
+    let raw = localStorage.getItem(KEY_V3);
     if (raw) {
       const data = JSON.parse(raw) as PersistedLibrary;
       const lib = parseLibraryData(data);
       if (lib) return lib;
+    }
+    raw = localStorage.getItem(KEY_V2);
+    if (raw) {
+      const data = JSON.parse(raw) as PersistedLibrary;
+      // migrate v2->v3
+      for (const k of Object.keys(data.playlists)) {
+        data.playlists[k] = (data.playlists[k] ?? []).map((ps) => migrateSongV2toV3(ps as PersistedSong));
+      }
+      const lib = parseLibraryData(data);
+      if (lib) { try { saveLibrary(lib); } catch {} return lib; }
     }
     raw = localStorage.getItem(KEY_V1);
     if (!raw) return null;
     const data = JSON.parse(raw) as PersistedLibrary;
     const lib = parseLibraryData(data);
     if (lib) {
-      // migrate: ensure all songs have source field
-      let curLib: Library | null = lib;
-      // also save to v2 for next loads
       try { saveLibrary(lib); } catch {}
-      return curLib;
+      return lib;
     }
     return null;
   } catch {
@@ -134,6 +163,7 @@ export function loadLibrary(): Library | null {
 
 export function clearLibraryStorage(): void {
   try {
+    localStorage.removeItem(KEY_V3);
     localStorage.removeItem(KEY_V2);
     localStorage.removeItem(KEY_V1);
   } catch {}

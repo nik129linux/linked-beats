@@ -86,8 +86,35 @@ export function mirroredIndex(i: number, bars: number): number {
 }
 
 function loop(): void {
-  if (!canvas || !ctx2d || !analyser) {
+  if (!canvas || !ctx2d) {
     if (playing) rafId = requestAnimationFrame(loop);
+    return;
+  }
+  // If analyser unavailable or active engine is youtube/non-cors, show idle breathing
+  // Detect via label: engines sets visualizerLabel to N/A for youtube/non-cors
+  const label = document.getElementById("visualizerLabel");
+  const labelIsNA = !!(label && label.textContent && label.textContent.includes("N/A"));
+  const isIdleEngine = labelIsNA;
+  if (!analyser || isIdleEngine) {
+    // idle breathing
+    if (!canvas) return;
+    const w = canvas.getBoundingClientRect().width;
+    const h = canvas.getBoundingClientRect().height;
+    const barW = w / BARS;
+    ctx2d.clearRect(0, 0, w, h);
+    const isInHero = canvas.closest(".hero") !== null;
+    const inkRgb = "20,20,19";
+    const paperRgb = "243,240,232";
+    for (let i = 0; i < BARS; i++) {
+      const val = (0.2 + 0.15 * Math.sin(Date.now() / 500 + i * 0.5)) * 0.3;
+      const barH = val * h + 4;
+      const x = i * barW + barW * 0.15;
+      const bw = Math.max(1, barW * 0.7);
+      const y = (h - barH) / 2;
+      ctx2d.fillStyle = isInHero ? `rgba(${paperRgb},0.7)` : `rgb(${inkRgb})`;
+      ctx2d.fillRect(x, y, bw, barH);
+    }
+    if (playing || document.visibilityState === "visible" || isIdleEngine) rafId = requestAnimationFrame(loop);
     return;
   }
   const w = canvas.getBoundingClientRect().width;

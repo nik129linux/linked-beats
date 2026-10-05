@@ -8,10 +8,14 @@ export interface Song {
   fileName?: string;
   fileSize?: number;
   artist?: string;
-  source: "local" | "remote";
+  source: "local" | "remote" | "youtube";
   remoteId?: string;
   artworkUrl?: string;
   trackTimeMillis?: number;
+  videoId?: string;
+  license?: string;
+  attribution?: string;
+  noCors?: boolean;
 }
 
 /**
@@ -33,13 +37,14 @@ export class Library {
   private playlists: Map<string, DoublyLinkedList<Song>> = new Map();
   private activeName: string | null = null;
 
+  /** constructor — preserves one playlist minimum */
   constructor(initialName = "Default") {
     const list = new DoublyLinkedList<Song>();
     this.playlists.set(initialName, list);
     this.activeName = initialName;
   }
 
-  /** Create a new empty playlist */
+  /** createPlaylist — preserves name uniqueness and map size */
   createPlaylist(name: string): void {
     const trimmed = name.trim();
     if (trimmed.length === 0) throw new Error("Playlist name cannot be empty");
@@ -48,7 +53,7 @@ export class Library {
     this.activeName = trimmed;
   }
 
-  /** Rename an existing playlist */
+  /** renamePlaylist — preserves referential identity of list */
   renamePlaylist(oldName: string, newName: string): void {
     const newTrimmed = newName.trim();
     if (newTrimmed.length === 0) throw new Error("New name cannot be empty");
@@ -61,7 +66,7 @@ export class Library {
     if (this.activeName === oldName) this.activeName = newTrimmed;
   }
 
-  /** Delete a playlist; must keep at least one */
+  /** deletePlaylist — preserves at least one playlist */
   deletePlaylist(name: string): void {
     if (!this.playlists.has(name)) throw new Error(`Playlist "${name}" not found`);
     if (this.playlists.size <= 1) throw new Error("Cannot delete the last playlist");
@@ -72,31 +77,34 @@ export class Library {
     }
   }
 
-  /** Switch active playlist */
+  /** switchTo — preserves activeName points to existing list */
   switchTo(name: string): void {
     if (!this.playlists.has(name)) throw new Error(`Playlist "${name}" not found`);
     this.activeName = name;
   }
 
-  /** Get active playlist list */
+  /** getActiveList — preserves null when no active */
   getActiveList(): DoublyLinkedList<Song> | null {
     if (this.activeName === null) return null;
     return this.playlists.get(this.activeName) ?? null;
   }
 
+  /** getActiveName — preserves activeName */
   getActiveName(): string | null {
     return this.activeName;
   }
 
+  /** getNames — preserves key order */
   getNames(): string[] {
     return [...this.playlists.keys()];
   }
 
+  /** getPlaylist — preserves map lookup */
   getPlaylist(name: string): DoublyLinkedList<Song> | undefined {
     return this.playlists.get(name);
   }
 
-  /** Direct access for tests/persistence */
+  /** getPlaylistsMap — preserves direct map reference */
   getPlaylistsMap(): Map<string, DoublyLinkedList<Song>> {
     return this.playlists;
   }

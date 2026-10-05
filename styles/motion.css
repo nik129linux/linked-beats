@@ -98,6 +98,35 @@
   }
 }
 
+@keyframes logoOrbit {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ringDash {
+  from {
+    transform: rotate(-90deg);
+  }
+
+  to {
+    transform: rotate(270deg);
+  }
+}
+
+.ring-progress.indeterminate {
+  animation: ringDash 1.2s linear infinite;
+  transform-origin: center;
+}
+
+.queue-sheet {
+  transition: transform var(--dur-base) var(--ease-out-expo), opacity var(--dur-base) var(--ease-out-expo);
+}
+
 /* Hover/press/focus shared */
 .btn,
 .btn-circle,
@@ -139,7 +168,16 @@
     animation: none !important;
   }
 
-  .cover-art.spinning {
+  .logo-orbit {
+    animation: none !important;
+  }
+
+  .cover-art.spinning,
+  .cover-art.paused-spin {
+    animation: none !important;
+  }
+
+  .ring-progress.indeterminate {
     animation: none !important;
   }
 
