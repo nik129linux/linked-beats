@@ -2,6 +2,8 @@
 
 Browser music player where every playlist is a hand-written doubly linked list. No frameworks, no bundlers, no hardcoded songs.
 
+Live: https://linked-beats-sooty.vercel.app
+
 ## What it is
 
 - Each playlist is a `DoublyLinkedList<Song>` with nodes `{ value, prev, next }`.
